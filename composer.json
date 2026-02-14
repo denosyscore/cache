@@ -1,0 +1,19 @@
+{
+  "name": "denosyscore/cache",
+  "description": "Cache abstractions and file cache implementation",
+  "type": "library",
+  "license": "MIT",
+  "require": {
+    "php": "^8.2",
+    "psr/simple-cache": "^3.0",
+    "denosyscore/contracts": "^0.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "CFXP\\Core\\": "src/"
+    }
+  },
+  "config": {
+    "sort-packages": true
+  }
+}
