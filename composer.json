@@ -6,11 +6,11 @@
   "require": {
     "php": "^8.2",
     "psr/simple-cache": "^3.0",
-    "denosyscore/contracts": "^0.1"
+    "denosyscore/contracts": "^0.2"
   },
   "autoload": {
     "psr-4": {
-      "CFXP\\Core\\": "src/"
+      "Denosys\\\\Cache\\\\": "src/Cache/"
     }
   },
   "config": {

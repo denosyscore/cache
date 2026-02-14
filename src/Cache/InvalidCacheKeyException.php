@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace CFXP\Core\Cache;
+namespace Denosys\Cache;
 
 use Psr\SimpleCache\InvalidArgumentException;
 
