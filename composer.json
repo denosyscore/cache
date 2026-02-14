@@ -10,7 +10,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Denosys\\\\Cache\\\\": "src/Cache/"
+      "Denosys\\Cache\\": "src/Cache/"
     }
   },
   "config": {
