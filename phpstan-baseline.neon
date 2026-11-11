@@ -1,0 +1,61 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Call to method alias\(\) on an unknown class Denosys\\Container\\ContainerInterface\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Cache/CacheServiceProvider.php
+
+		-
+			message: '#^Call to method get\(\) on an unknown class Denosys\\Container\\ContainerInterface\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Cache/CacheServiceProvider.php
+
+		-
+			message: '#^Call to method singleton\(\) on an unknown class Denosys\\Container\\ContainerInterface\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Cache/CacheServiceProvider.php
+
+		-
+			message: '#^Cannot call method get\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Cache/CacheServiceProvider.php
+
+		-
+			message: '#^Parameter \#1 \$directory of class Denosys\\Cache\\FileCache constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Cache/CacheServiceProvider.php
+
+		-
+			message: '#^Parameter \$container of anonymous function has invalid type Denosys\\Container\\ContainerInterface\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Cache/CacheServiceProvider.php
+
+		-
+			message: '#^Parameter \$container of method Denosys\\Cache\\CacheServiceProvider\:\:boot\(\) has invalid type Denosys\\Container\\ContainerInterface\.$#'
+			identifier: class.notFound
+			count: 2
+			path: src/Cache/CacheServiceProvider.php
+
+		-
+			message: '#^Parameter \$container of method Denosys\\Cache\\CacheServiceProvider\:\:register\(\) has invalid type Denosys\\Container\\ContainerInterface\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Cache/CacheServiceProvider.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 1
+			path: src/Cache/FileCache.php
+
+		-
+			message: '#^Method Denosys\\Cache\\FileCache\:\:readEntry\(\) should return array\{value\: mixed, expires_at\: int\|null\}\|null but returns array\{value\: mixed, expires_at\: mixed\}\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Cache/FileCache.php
