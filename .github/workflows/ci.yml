@@ -22,6 +22,12 @@ jobs:
       - name: Validate composer.json
         run: composer validate --strict
 
+      - name: Install development dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Tests
+        run: composer test
+
       - name: PHP syntax check
         run: |
           if [ -d src ]; then
