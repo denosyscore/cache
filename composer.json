@@ -8,10 +8,16 @@
     "psr/simple-cache": "^3.0",
     "denosyscore/contracts": "^0.2"
   },
+  "require-dev": {
+    "phpunit/phpunit": "^11.5"
+  },
   "autoload": {
     "psr-4": {
       "Denosys\\Cache\\": "src/Cache/"
     }
+  },
+  "scripts": {
+    "test": "phpunit"
   },
   "config": {
     "sort-packages": true

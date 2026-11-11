@@ -9,6 +9,9 @@ use Psr\SimpleCache\InvalidArgumentException;
 
 class FileCache implements CacheInterface
 {
+    /** Expiry for counters created by increment() or decrement(). */
+    private const DEFAULT_COUNTER_TTL = 3600;
+
     private string $directory;
 
     /**
@@ -64,24 +67,9 @@ class FileCache implements CacheInterface
         $path = $this->getPath($key);
         $seconds = $this->ttlToSeconds($ttl);
 
-        $data = [
-            'value' => $value,
-            'expires_at' => $seconds !== null ? time() + $seconds : null,
-        ];
-
-        $json = json_encode($data);
-        if ($json === false) {
-            return false;
-        }
-
         $this->ensureDirectoryExists();
 
-        $tempPath = $path . '.tmp.' . uniqid();
-        if (file_put_contents($tempPath, $json, LOCK_EX) === false) {
-            return false;
-        }
-
-        return rename($tempPath, $path);
+        return $this->writeEntry($path, $value, $seconds !== null ? time() + $seconds : null);
     }
 
     /**
@@ -105,11 +93,15 @@ class FileCache implements CacheInterface
      */
     public function clear(): bool
     {
-        $files = glob($this->directory . '/*.cache');
-        
-        if ($files === false) {
+        // Two globs rather than GLOB_BRACE, which musl-based systems lack.
+        $cacheFiles = glob($this->directory . '/*.cache');
+        $lockFiles = glob($this->directory . '/*.lock');
+
+        if ($cacheFiles === false || $lockFiles === false) {
             return false;
         }
+
+        $files = [...$cacheFiles, ...$lockFiles];
 
         foreach ($files as $file) {
             unlink($file);
@@ -180,26 +172,32 @@ class FileCache implements CacheInterface
      */
     public function increment(string $key, int $value = 1): int
     {
-        $current = $this->get($key, 0);
-        $newValue = (int) $current + $value;
+        $this->validateKey($key);
+        $this->ensureDirectoryExists();
 
-        // Get remaining TTL if exists, otherwise use a default
         $path = $this->getPath($key);
-        $ttl = 3600; // Default 1 hour
 
-        if (file_exists($path)) {
-            $contents = file_get_contents($path);
-            if ($contents !== false) {
-                $data = json_decode($contents, true);
-                if (is_array($data) && isset($data['expires_at'])) {
-                    $ttl = max(1, (int) $data['expires_at'] - time());
-                }
-            }
+        // Serialise read-modify-write across processes with an exclusive lock on a
+        // companion lock file; the cache file itself is replaced by rename().
+        $lock = fopen($path . '.lock', 'c');
+        if ($lock === false || !flock($lock, LOCK_EX)) {
+            throw new \RuntimeException("Unable to lock cache key [{$key}] for increment.");
         }
 
-        $this->set($key, $newValue, $ttl);
+        try {
+            $data = $this->readEntry($path);
+            $expiresAt = $data === null ? time() + self::DEFAULT_COUNTER_TTL : $data['expires_at'];
+            $newValue = (int) ($data['value'] ?? 0) + $value;
 
-        return $newValue;
+            if (!$this->writeEntry($path, $newValue, $expiresAt)) {
+                throw new \RuntimeException("Unable to write cache key [{$key}].");
+            }
+
+            return $newValue;
+        } finally {
+            flock($lock, LOCK_UN);
+            fclose($lock);
+        }
     }
 
     /**
@@ -213,6 +211,38 @@ class FileCache implements CacheInterface
     /**
      * Get the full path for a cache key.
      */
+    /**
+     * Read a live entry, or null when it is missing, unreadable or expired.
+     *
+     * @return array{value: mixed, expires_at: int|null}|null
+     */
+    private function readEntry(string $path): ?array
+    {
+        $contents = is_file($path) ? file_get_contents($path) : false;
+        $data = $contents === false ? null : json_decode($contents, true);
+
+        if (!is_array($data) || (isset($data['expires_at']) && $data['expires_at'] < time())) {
+            return null;
+        }
+
+        return ['value' => $data['value'] ?? null, 'expires_at' => $data['expires_at'] ?? null];
+    }
+
+    private function writeEntry(string $path, mixed $value, ?int $expiresAt): bool
+    {
+        $json = json_encode(['value' => $value, 'expires_at' => $expiresAt]);
+        if ($json === false) {
+            return false;
+        }
+
+        $tempPath = $path . '.tmp.' . bin2hex(random_bytes(6));
+        if (file_put_contents($tempPath, $json, LOCK_EX) === false) {
+            return false;
+        }
+
+        return rename($tempPath, $path);
+    }
+
     private function getPath(string $key): string
     {
         // Create a safe filename from the key
