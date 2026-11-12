@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.11.0 – 2026-11-12
+
+- **Breaking:** `Denosys\Cache\CacheServiceProvider` moved to the framework as `Denosys\Framework\Providers\CacheServiceProvider`. Packages no longer ship service providers; the framework wires packages together.
+- Requires no other DenoSys package.
+
 ## 0.10.0 – 2026-11-12
 
 ### Changed
