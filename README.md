@@ -1,5 +1,7 @@
 # denosyscore/cache
 
+> **Read-only split.** This package is developed in [denosyscore/framework](https://github.com/denosyscore/framework) under `packages/cache`. Open issues and pull requests there.
+
 Cache abstractions and file cache implementation
 
 ## Installation
@@ -39,9 +41,3 @@ $cache->clear();
 
 composer validate --strict
 find src -type f -name '*.php' -print0 | xargs -0 -n1 php -l
-
-## CI Workflows
-
-- CI: composer validation + PHP syntax lint on push and pull requests.
-- Release: GitHub release publication on semantic version tags.
-- Dependabot: weekly Composer dependency update checks.
