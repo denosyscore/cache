@@ -211,6 +211,11 @@ final class FileCache implements CacheInterface, AtomicCounter
      */
     private function readEntry(string $path): ?array
     {
+        // A missing entry is the common case; check first so it raises no
+        // warning. The @ covers only a delete racing between the two calls.
+        if (!is_file($path)) {
+            return null;
+        }
         $contents = @file_get_contents($path);
         $data = $contents === false ? null : json_decode($contents, true);
 

@@ -78,4 +78,25 @@ final class AtomicCounterTest extends TestCase
 
         $this->cache->increment('hits', 1, 0);
     }
+
+    public function testReadingAMissingKeyRaisesNoWarning(): void
+    {
+        $raised = [];
+        set_error_handler(static function (int $level, string $message) use (&$raised): bool {
+            $raised[] = $message;
+
+            return true;
+        });
+
+        try {
+            $this->cache->get('missing');
+            $this->cache->current('missing');
+            $this->cache->expiresAt('missing');
+            $this->cache->increment('fresh');
+        } finally {
+            restore_error_handler();
+        }
+
+        self::assertSame([], $raised);
+    }
 }

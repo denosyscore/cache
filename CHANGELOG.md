@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.22.1 – 2026-11-13
+
+### Fixed
+
+- Reading a missing key no longer raises a suppressed warning, which test
+  runners report even when `@` hides it.
+
 ## 0.22.0 – 2026-11-13
 
 ### Added
