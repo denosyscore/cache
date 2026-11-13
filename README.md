@@ -27,15 +27,22 @@ $cache = new FileCache(sys_get_temp_dir() . '/my-app-cache');
 $cache->set('greeting', 'Hello', 60);          // PSR-16: TTL in seconds
 echo $cache->get('greeting', 'missing'), "\n";  // Hello
 
-$cache->increment('visits');                    // atomic across processes
+$cache->increment('visits', 1, 3600);           // atomic across processes; lives an hour
 echo $cache->increment('visits', 2), "\n";      // 3
+echo $cache->current('visits'), "\n";           // 3
 
 $cache->clear();
 ```
 
-## Included Modules
+## Counters
 
-- src/Cache/*
+`FileCache` implements PSR-16 and `AtomicCounter`. `increment($key, $by,
+$ttlSeconds)` locks the counter, so concurrent processes never lose a count.
+The TTL is set when the counter starts and later increments do not extend
+it; an expired counter starts again. `current()` reads a counter (0 when
+missing), `expiresAt()` says when its window ends, and `reset()` removes it. Type against
+`Psr\SimpleCache\CacheInterface` for caching and `AtomicCounter` for
+counting.
 
 ## Development
 

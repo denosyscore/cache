@@ -29,7 +29,7 @@ final class FileCacheIncrementTest extends TestCase
         $processes = 6;
         $perProcess = 150;
         $script = sprintf(
-            'require %s; $c = new Denosys\Cache\FileCache(%s); for ($i = 0; $i < %d; $i++) { $c->increment("hits"); }',
+            'require %s; $c = new Denosys\Cache\FileCache(%s); for ($i = 0; $i < %d; $i++) { $c->increment("hits", 1, 60); }',
             var_export(dirname(__DIR__) . '/vendor/autoload.php', true),
             var_export($this->directory, true),
             $perProcess,
@@ -49,22 +49,29 @@ final class FileCacheIncrementTest extends TestCase
         self::assertSame($processes * $perProcess, (new FileCache($this->directory))->get('hits'));
     }
 
-    public function testIncrementKeepsTheExistingExpiry(): void
+    public function testAnEntryThatIsNotACounterStartsANewCounter(): void
     {
         $cache = new FileCache($this->directory);
-        $cache->set('permanent', 5);
-        $cache->set('expiring', 5, 120);
+        $cache->set('text', 'abc');
+        $cache->set('forever', 5);
 
-        $cache->increment('permanent');
-        $cache->increment('expiring');
+        self::assertSame(1, $cache->increment('text', 1, 60));
+        self::assertSame(1, $cache->increment('forever', 1, 60));
 
-        $read = static function (string $directory, string $key): array {
-            return json_decode((string) file_get_contents($directory . '/' . sha1($key) . '.cache'), true);
-        };
+        $read = static fn (string $directory, string $key): array => json_decode((string) file_get_contents($directory . '/' . sha1($key) . '.cache'), true);
+        self::assertEqualsWithDelta(time() + 60, $read($this->directory, 'forever')['expires_at'], 2);
+    }
 
-        self::assertNull($read($this->directory, 'permanent')['expires_at']);
-        self::assertSame(6, $read($this->directory, 'permanent')['value']);
-        self::assertEqualsWithDelta(time() + 120, $read($this->directory, 'expiring')['expires_at'], 2);
+    public function testReadingAnExpiredCounterDoesNotDeleteANewWindow(): void
+    {
+        $cache = new FileCache($this->directory);
+        $cache->increment('hits', 1, 1);
+        sleep(2);
+
+        self::assertSame(0, $cache->current('hits'));
+        self::assertTrue(is_file($this->directory . '/' . sha1('hits') . '.cache'), 'reads leave expired files for the next writer');
+        self::assertSame(1, $cache->increment('hits', 1, 60));
+        self::assertSame(1, $cache->current('hits'));
     }
 
     public function testClearRemovesCounterLockFiles(): void
@@ -74,10 +81,5 @@ final class FileCacheIncrementTest extends TestCase
 
         self::assertTrue($cache->clear());
         self::assertSame([], glob($this->directory . '/*') ?: []);
-    }
-
-    public function testDecrementOfAMissingKeyStartsFromZero(): void
-    {
-        self::assertSame(-2, (new FileCache($this->directory))->decrement('missing', 2));
     }
 }

@@ -1,12 +1,6 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Cannot cast mixed to int\.$#'
-			identifier: cast.int
-			count: 1
-			path: src/Cache/FileCache.php
-
-		-
 			message: '#^Method Denosys\\Cache\\FileCache\:\:readEntry\(\) should return array\{value\: mixed, expires_at\: int\|null\}\|null but returns array\{value\: mixed, expires_at\: mixed\}\.$#'
 			identifier: return.type
 			count: 1

@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.22.0 – 2026-11-13
+
+### Added
+
+- `AtomicCounter`: `increment($key, $by, $ttlSeconds)`, `current()`,
+  `expiresAt()` and `reset()`. The TTL starts with the counter and later increments do not
+  extend it. `FileCache` implements it with a lock per counter. An entry
+  that is not a live counter starts a new one, and reading an expired entry
+  no longer deletes it outside the lock.
+
+### Removed (breaking)
+
+- `CacheInterface` and `decrement()`. Type against
+  `Psr\SimpleCache\CacheInterface` for caching and `AtomicCounter` for
+  counting. `increment()` takes a TTL instead of a fixed one-hour default.
+
 ## 0.21.0 – 2026-11-13
 
 - Released with the framework's 0.21 line. This package has no DenoSys
